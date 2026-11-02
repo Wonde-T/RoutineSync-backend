@@ -1,0 +1,10 @@
+export declare const DAY_MS: number;
+export declare function toDateOnly(value: Date): string;
+export declare function parseDateOnly(value: string): Date;
+export declare function addDays(value: string, days: number): string;
+export declare function startOfWeek(value: string): string;
+export declare function endOfWeek(value: string): string;
+export declare function dayNumber(value: string): number;
+export declare function todayInTimezone(timezone: string): string;
+export declare function weekDays(weekStart: string): string[];
+export declare function secondsBetween(start: Date, end: Date): number;
