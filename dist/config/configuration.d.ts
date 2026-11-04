@@ -7,6 +7,7 @@ export interface AppConfiguration {
         username: string;
         password: string;
         name: string;
+        ssl: boolean;
         synchronize: boolean;
     };
     jwt: {
