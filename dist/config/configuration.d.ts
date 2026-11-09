@@ -14,6 +14,14 @@ export interface AppConfiguration {
         secret: string;
         expiresIn: string;
     };
+    mail: {
+        host?: string;
+        port: number;
+        secure: boolean;
+        user?: string;
+        pass?: string;
+        from: string;
+    };
 }
 declare const _default: () => AppConfiguration;
 export default _default;

@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.User = exports.TimeLog = exports.Task = exports.TaskSession = void 0;
+exports.User = exports.TimeLog = exports.Task = exports.TaskSession = exports.PasswordReset = void 0;
+var password_reset_entity_1 = require("./password-reset.entity");
+Object.defineProperty(exports, "PasswordReset", { enumerable: true, get: function () { return password_reset_entity_1.PasswordReset; } });
 var task_session_entity_1 = require("./task-session.entity");
 Object.defineProperty(exports, "TaskSession", { enumerable: true, get: function () { return task_session_entity_1.TaskSession; } });
 var task_entity_1 = require("./task.entity");

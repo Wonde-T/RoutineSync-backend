@@ -17,6 +17,7 @@ const users_module_1 = require("../users/users.module");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const mail_service_1 = require("./mail.service");
 const jwt_strategy_1 = require("./strategies/jwt.strategy");
 let AuthModule = class AuthModule {
 };
@@ -25,7 +26,7 @@ exports.AuthModule = AuthModule = __decorate([
     (0, common_1.Global)(),
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([entities_1.User]),
+            typeorm_1.TypeOrmModule.forFeature([entities_1.User, entities_1.PasswordReset]),
             passport_1.PassportModule.register({ defaultStrategy: 'jwt' }),
             jwt_1.JwtModule.registerAsync({
                 imports: [config_1.ConfigModule],
@@ -41,7 +42,7 @@ exports.AuthModule = AuthModule = __decorate([
             users_module_1.UsersModule,
         ],
         controllers: [auth_controller_1.AuthController],
-        providers: [auth_service_1.AuthService, jwt_strategy_1.JwtStrategy, jwt_auth_guard_1.JwtAuthGuard],
+        providers: [auth_service_1.AuthService, mail_service_1.MailService, jwt_strategy_1.JwtStrategy, jwt_auth_guard_1.JwtAuthGuard],
         exports: [auth_service_1.AuthService, jwt_auth_guard_1.JwtAuthGuard],
     })
 ], AuthModule);

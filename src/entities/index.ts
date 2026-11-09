@@ -1,3 +1,4 @@
+export { PasswordReset } from './password-reset.entity';
 export { TaskSession } from './task-session.entity';
 export { Task } from './task.entity';
 export { TimeLog } from './time-log.entity';
