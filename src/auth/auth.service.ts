@@ -10,10 +10,12 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'crypto';
+import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import { Repository } from 'typeorm';
 import { JwtPayload } from '../common/interfaces/auth-user.interface';
 import { PasswordReset, User } from '../entities';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { GoogleAuthDto } from './dto/google-auth.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -32,6 +34,7 @@ const GENERIC_FORGOT_MESSAGE =
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private readonly googleClient = new OAuth2Client();
 
   constructor(
     @InjectRepository(User)
@@ -67,11 +70,90 @@ export class AuthService {
       where: { email: dto.email },
     });
 
-    if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
+    if (
+      !user ||
+      !user.passwordHash ||
+      !(await bcrypt.compare(dto.password, user.passwordHash))
+    ) {
       throw new UnauthorizedException('Invalid email or password');
     }
 
     return this.buildAuthResponse(user);
+  }
+
+  /**
+   * Verify a Google ID token and sign the matching user in. Users created via
+   * Google have no password hash and cannot use the email/password endpoint
+   * until they set one through the password reset flow.
+   */
+  async googleLogin(dto: GoogleAuthDto) {
+    const clientId = this.configService.get<string>('GOOGLE_WEB_CLIENT_ID');
+    if (!clientId) {
+      this.logger.error('GOOGLE_WEB_CLIENT_ID is not configured');
+      throw new UnauthorizedException('Google sign-in is not configured');
+    }
+
+    const payload = await this.verifyGoogleIdToken(dto.idToken, clientId);
+    const googleId = payload.sub;
+    const email = payload.email?.trim().toLowerCase();
+
+    if (!googleId || !email || payload.email_verified !== true) {
+      throw new UnauthorizedException(
+        'Google account is missing a verified email',
+      );
+    }
+
+    let user = await this.usersRepository.findOne({ where: { googleId } });
+
+    if (!user) {
+      user = await this.usersRepository.findOne({ where: { email } });
+    }
+
+    if (!user) {
+      user = this.usersRepository.create({
+        email,
+        googleId,
+        name: payload.name ?? null,
+        picture: payload.picture ?? null,
+        passwordHash: null,
+      });
+    } else {
+      if (user.googleId && user.googleId !== googleId) {
+        throw new ConflictException(
+          'This email is already linked to a different Google account',
+        );
+      }
+      user.googleId = googleId;
+      user.name = payload.name ?? user.name ?? null;
+      user.picture = payload.picture ?? user.picture ?? null;
+    }
+
+    const saved = await this.usersRepository.save(user);
+    return this.buildAuthResponse(saved);
+  }
+
+  private async verifyGoogleIdToken(
+    idToken: string,
+    clientId: string,
+  ): Promise<TokenPayload> {
+    try {
+      const ticket = await this.googleClient.verifyIdToken({
+        idToken,
+        audience: clientId,
+      });
+      const payload = ticket.getPayload();
+      if (!payload) {
+        throw new Error('Google token payload is empty');
+      }
+      return payload;
+    } catch (error) {
+      this.logger.warn(
+        `Google ID token verification failed: ${
+          error instanceof Error ? error.message : 'unknown error'
+        }`,
+      );
+      throw new UnauthorizedException('Invalid Google token');
+    }
   }
 
   /**
@@ -84,7 +166,7 @@ export class AuthService {
       where: { email: dto.email },
     });
     if (!user) {
-      return { message: GENERIC_FORGOT_MESSAGE };
+      return this.forgotResponse();
     }
 
     const now = new Date();
@@ -97,7 +179,7 @@ export class AuthService {
       record &&
       now.getTime() - record.codeSentAt.getTime() < RESEND_COOLDOWN_MS
     ) {
-      return { message: GENERIC_FORGOT_MESSAGE };
+      return this.forgotResponse();
     }
 
     const code = this.generateCode();
@@ -110,6 +192,7 @@ export class AuthService {
     record.tokenExpiresAt = null;
     await this.resetRepository.save(record);
 
+    let deliveryFailed = false;
     try {
       await this.mailService.sendPasswordResetCode(
         dto.email,
@@ -119,13 +202,22 @@ export class AuthService {
     } catch (error) {
       // Keep the endpoint response uniform; the operator sees the failure in
       // the logs and the code remains valid for a retry.
+      deliveryFailed = true;
       this.logger.error(
         `Failed to send password reset email to ${dto.email}`,
         error instanceof Error ? error.stack : undefined,
       );
     }
 
-    return { message: GENERIC_FORGOT_MESSAGE };
+    return this.forgotResponse(deliveryFailed);
+  }
+
+  private forgotResponse(deliveryFailed = false) {
+    return {
+      message: GENERIC_FORGOT_MESSAGE,
+      emailConfigured: this.mailService.isConfigured,
+      deliveryFailed,
+    };
   }
 
   /** Verify the emailed code and exchange it for a short-lived reset token. */

@@ -6,10 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { TaskSessionStatus } from '../common/enums/task-session-status.enum';
-import {
-  secondsBetween,
-  toDateOnly,
-} from '../common/utils/date.util';
+import { secondsBetween, toDateOnly } from '../common/utils/date.util';
 import { Task, TaskSession, TimeLog } from '../entities';
 import { PauseSessionDto } from './dto/pause-session.dto';
 import { QuerySessionsDto } from './dto/query-sessions.dto';
@@ -203,7 +200,9 @@ export class SessionsService {
       }
 
       if (log.endTime) {
-        return total + secondsBetween(new Date(log.startTime), new Date(log.endTime));
+        return (
+          total + secondsBetween(new Date(log.startTime), new Date(log.endTime))
+        );
       }
 
       if (includeOpen) {

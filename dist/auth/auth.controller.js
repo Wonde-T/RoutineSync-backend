@@ -19,6 +19,7 @@ const current_user_decorator_1 = require("../common/decorators/current-user.deco
 const users_service_1 = require("../users/users.service");
 const auth_service_1 = require("./auth.service");
 const forgot_password_dto_1 = require("./dto/forgot-password.dto");
+const google_auth_dto_1 = require("./dto/google-auth.dto");
 const login_dto_1 = require("./dto/login.dto");
 const register_dto_1 = require("./dto/register.dto");
 const reset_password_dto_1 = require("./dto/reset-password.dto");
@@ -36,6 +37,9 @@ let AuthController = class AuthController {
     }
     login(dto) {
         return this.authService.login(dto);
+    }
+    google(dto) {
+        return this.authService.googleLogin(dto);
     }
     forgotPassword(dto) {
         return this.authService.forgotPassword(dto);
@@ -68,6 +72,15 @@ __decorate([
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('google'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Authenticate with a Google ID token' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [google_auth_dto_1.GoogleAuthDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "google", null);
 __decorate([
     (0, common_1.Post)('forgot-password'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

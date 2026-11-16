@@ -5,5 +5,6 @@ export declare class MailService {
     private readonly transporter?;
     private readonly from;
     constructor(config: ConfigService);
+    get isConfigured(): boolean;
     sendPasswordResetCode(to: string, code: string, ttlMinutes: number): Promise<void>;
 }

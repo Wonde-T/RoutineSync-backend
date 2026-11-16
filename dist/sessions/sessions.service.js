@@ -159,7 +159,7 @@ let SessionsService = class SessionsService {
                 return total + log.durationSeconds;
             }
             if (log.endTime) {
-                return total + (0, date_util_1.secondsBetween)(new Date(log.startTime), new Date(log.endTime));
+                return (total + (0, date_util_1.secondsBetween)(new Date(log.startTime), new Date(log.endTime)));
             }
             if (includeOpen) {
                 return total + (0, date_util_1.secondsBetween)(new Date(log.startTime), new Date());

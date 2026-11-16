@@ -18,14 +18,7 @@ export class ReportsController {
     summary:
       'Weekly planned vs actual aggregation with overtime, categories and streaks',
   })
-  weekly(
-    @CurrentUser() user: AuthUser,
-    @Query() query: WeeklyReportQueryDto,
-  ) {
-    return this.reportsService.weekly(
-      user.id,
-      user.timezone,
-      query.weekStart,
-    );
+  weekly(@CurrentUser() user: AuthUser, @Query() query: WeeklyReportQueryDto) {
+    return this.reportsService.weekly(user.id, user.timezone, query.weekStart);
   }
 }

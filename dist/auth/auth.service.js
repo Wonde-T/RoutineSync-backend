@@ -53,6 +53,7 @@ const jwt_1 = require("@nestjs/jwt");
 const typeorm_1 = require("@nestjs/typeorm");
 const bcrypt = __importStar(require("bcrypt"));
 const crypto_1 = require("crypto");
+const google_auth_library_1 = require("google-auth-library");
 const typeorm_2 = require("typeorm");
 const entities_1 = require("../entities");
 const mail_service_1 = require("./mail.service");
@@ -69,6 +70,7 @@ let AuthService = AuthService_1 = class AuthService {
     mailService;
     configService;
     logger = new common_1.Logger(AuthService_1.name);
+    googleClient = new google_auth_library_1.OAuth2Client();
     constructor(usersRepository, resetRepository, jwtService, mailService, configService) {
         this.usersRepository = usersRepository;
         this.resetRepository = resetRepository;
@@ -95,17 +97,72 @@ let AuthService = AuthService_1 = class AuthService {
         const user = await this.usersRepository.findOne({
             where: { email: dto.email },
         });
-        if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
+        if (!user ||
+            !user.passwordHash ||
+            !(await bcrypt.compare(dto.password, user.passwordHash))) {
             throw new common_1.UnauthorizedException('Invalid email or password');
         }
         return this.buildAuthResponse(user);
+    }
+    async googleLogin(dto) {
+        const clientId = this.configService.get('GOOGLE_WEB_CLIENT_ID');
+        if (!clientId) {
+            this.logger.error('GOOGLE_WEB_CLIENT_ID is not configured');
+            throw new common_1.UnauthorizedException('Google sign-in is not configured');
+        }
+        const payload = await this.verifyGoogleIdToken(dto.idToken, clientId);
+        const googleId = payload.sub;
+        const email = payload.email?.trim().toLowerCase();
+        if (!googleId || !email || payload.email_verified !== true) {
+            throw new common_1.UnauthorizedException('Google account is missing a verified email');
+        }
+        let user = await this.usersRepository.findOne({ where: { googleId } });
+        if (!user) {
+            user = await this.usersRepository.findOne({ where: { email } });
+        }
+        if (!user) {
+            user = this.usersRepository.create({
+                email,
+                googleId,
+                name: payload.name ?? null,
+                picture: payload.picture ?? null,
+                passwordHash: null,
+            });
+        }
+        else {
+            if (user.googleId && user.googleId !== googleId) {
+                throw new common_1.ConflictException('This email is already linked to a different Google account');
+            }
+            user.googleId = googleId;
+            user.name = payload.name ?? user.name ?? null;
+            user.picture = payload.picture ?? user.picture ?? null;
+        }
+        const saved = await this.usersRepository.save(user);
+        return this.buildAuthResponse(saved);
+    }
+    async verifyGoogleIdToken(idToken, clientId) {
+        try {
+            const ticket = await this.googleClient.verifyIdToken({
+                idToken,
+                audience: clientId,
+            });
+            const payload = ticket.getPayload();
+            if (!payload) {
+                throw new Error('Google token payload is empty');
+            }
+            return payload;
+        }
+        catch (error) {
+            this.logger.warn(`Google ID token verification failed: ${error instanceof Error ? error.message : 'unknown error'}`);
+            throw new common_1.UnauthorizedException('Invalid Google token');
+        }
     }
     async forgotPassword(dto) {
         const user = await this.usersRepository.findOne({
             where: { email: dto.email },
         });
         if (!user) {
-            return { message: GENERIC_FORGOT_MESSAGE };
+            return this.forgotResponse();
         }
         const now = new Date();
         let record = await this.resetRepository.findOne({
@@ -113,7 +170,7 @@ let AuthService = AuthService_1 = class AuthService {
         });
         if (record &&
             now.getTime() - record.codeSentAt.getTime() < RESEND_COOLDOWN_MS) {
-            return { message: GENERIC_FORGOT_MESSAGE };
+            return this.forgotResponse();
         }
         const code = this.generateCode();
         record ??= this.resetRepository.create({ email: dto.email });
@@ -124,13 +181,22 @@ let AuthService = AuthService_1 = class AuthService {
         record.tokenHash = null;
         record.tokenExpiresAt = null;
         await this.resetRepository.save(record);
+        let deliveryFailed = false;
         try {
             await this.mailService.sendPasswordResetCode(dto.email, code, CODE_TTL_MINUTES);
         }
         catch (error) {
+            deliveryFailed = true;
             this.logger.error(`Failed to send password reset email to ${dto.email}`, error instanceof Error ? error.stack : undefined);
         }
-        return { message: GENERIC_FORGOT_MESSAGE };
+        return this.forgotResponse(deliveryFailed);
+    }
+    forgotResponse(deliveryFailed = false) {
+        return {
+            message: GENERIC_FORGOT_MESSAGE,
+            emailConfigured: this.mailService.isConfigured,
+            deliveryFailed,
+        };
     }
     async verifyResetCode(dto) {
         const record = await this.resetRepository.findOne({

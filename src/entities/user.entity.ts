@@ -21,8 +21,18 @@ export class User {
   email!: string;
 
   @Exclude()
-  @Column({ name: 'password_hash' })
-  passwordHash!: string;
+  @Column({ name: 'password_hash', type: 'varchar', nullable: true })
+  passwordHash!: string | null;
+
+  @Index({ unique: true })
+  @Column({ name: 'google_id', type: 'varchar', nullable: true })
+  googleId?: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  name?: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  picture?: string | null;
 
   @Column({ default: 'UTC' })
   timezone!: string;

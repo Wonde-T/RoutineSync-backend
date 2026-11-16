@@ -70,11 +70,7 @@ export class TasksService {
     return this.tasksRepository.save(task);
   }
 
-  async update(
-    userId: string,
-    id: string,
-    dto: UpdateTaskDto,
-  ): Promise<Task> {
+  async update(userId: string, id: string, dto: UpdateTaskDto): Promise<Task> {
     const task = await this.findOne(userId, id);
 
     if (dto.title !== undefined) task.title = dto.title.trim();

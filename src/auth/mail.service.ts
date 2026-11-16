@@ -32,6 +32,10 @@ export class MailService {
     }
   }
 
+  get isConfigured(): boolean {
+    return this.transporter !== undefined;
+  }
+
   async sendPasswordResetCode(
     to: string,
     code: string,

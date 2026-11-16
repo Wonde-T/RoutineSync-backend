@@ -69,6 +69,9 @@ let MailService = MailService_1 = class MailService {
             });
         }
     }
+    get isConfigured() {
+        return this.transporter !== undefined;
+    }
     async sendPasswordResetCode(to, code, ttlMinutes) {
         const subject = 'Your RoutineSync password reset code';
         const text = `Use the verification code below to reset your RoutineSync password.\n\n` +

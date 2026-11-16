@@ -57,7 +57,9 @@ __decorate([
 ], TasksController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('today'),
-    (0, swagger_1.ApiOperation)({ summary: 'List tasks scheduled for today in the user timezone' }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'List tasks scheduled for today in the user timezone',
+    }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),

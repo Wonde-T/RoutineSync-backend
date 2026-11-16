@@ -1,9 +1,4 @@
-import {
-  IsDateString,
-  IsOptional,
-  IsUUID,
-  Matches,
-} from 'class-validator';
+import { IsDateString, IsOptional, IsUUID, Matches } from 'class-validator';
 
 export class StartSessionDto {
   @IsUUID()

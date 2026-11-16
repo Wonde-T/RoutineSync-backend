@@ -40,10 +40,7 @@ export class SessionsController {
 
   @Get()
   @ApiOperation({ summary: 'List tracked sessions, optionally by date range' })
-  findAll(
-    @CurrentUser() user: AuthUser,
-    @Query() query: QuerySessionsDto,
-  ) {
+  findAll(@CurrentUser() user: AuthUser, @Query() query: QuerySessionsDto) {
     return this.sessionsService.findAll(user.id, query);
   }
 

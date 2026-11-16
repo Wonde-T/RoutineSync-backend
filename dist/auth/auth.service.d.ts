@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import { PasswordReset, User } from '../entities';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { GoogleAuthDto } from './dto/google-auth.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -15,6 +16,7 @@ export declare class AuthService {
     private readonly mailService;
     private readonly configService;
     private readonly logger;
+    private readonly googleClient;
     constructor(usersRepository: Repository<User>, resetRepository: Repository<PasswordReset>, jwtService: JwtService, mailService: MailService, configService: ConfigService);
     register(dto: RegisterDto): Promise<{
         accessToken: string;
@@ -24,9 +26,17 @@ export declare class AuthService {
         accessToken: string;
         user: User;
     }>;
+    googleLogin(dto: GoogleAuthDto): Promise<{
+        accessToken: string;
+        user: User;
+    }>;
+    private verifyGoogleIdToken;
     forgotPassword(dto: ForgotPasswordDto): Promise<{
         message: string;
+        emailConfigured: boolean;
+        deliveryFailed: boolean;
     }>;
+    private forgotResponse;
     verifyResetCode(dto: VerifyResetCodeDto): Promise<{
         resetToken: string;
         expiresInSeconds: number;

@@ -18,6 +18,9 @@ let User = class User {
     id;
     email;
     passwordHash;
+    googleId;
+    name;
+    picture;
     timezone;
     createdAt;
     updatedAt;
@@ -36,9 +39,22 @@ __decorate([
 ], User.prototype, "email", void 0);
 __decorate([
     (0, class_transformer_1.Exclude)(),
-    (0, typeorm_1.Column)({ name: 'password_hash' }),
-    __metadata("design:type", String)
+    (0, typeorm_1.Column)({ name: 'password_hash', type: 'varchar', nullable: true }),
+    __metadata("design:type", Object)
 ], User.prototype, "passwordHash", void 0);
+__decorate([
+    (0, typeorm_1.Index)({ unique: true }),
+    (0, typeorm_1.Column)({ name: 'google_id', type: 'varchar', nullable: true }),
+    __metadata("design:type", Object)
+], User.prototype, "googleId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", Object)
+], User.prototype, "name", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', nullable: true }),
+    __metadata("design:type", Object)
+], User.prototype, "picture", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: 'UTC' }),
     __metadata("design:type", String)

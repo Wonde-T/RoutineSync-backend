@@ -50,18 +50,16 @@ export function buildWeeklySummary(
   );
 
   const byTask: TaskBreakdown[] = relevantTasks.map((task) => {
-    const plannedSeconds =
-      task.minimumMinutes * 60 * task.targetDays.length;
+    const plannedSeconds = task.minimumMinutes * 60 * task.targetDays.length;
     const actualSeconds = sessionsInWeek
       .filter((session) => session.taskId === task.id)
       .reduce((total, session) => total + session.totalTimeTrackedSeconds, 0);
     const overtimeSeconds = sessionsInWeek
       .filter((session) => session.taskId === task.id)
       .reduce((total, session) => {
-        const dailyPlan =
-          task.targetDays.includes(dayNumber(session.date))
-            ? task.minimumMinutes * 60
-            : 0;
+        const dailyPlan = task.targetDays.includes(dayNumber(session.date))
+          ? task.minimumMinutes * 60
+          : 0;
         return total + Math.max(0, session.totalTimeTrackedSeconds - dailyPlan);
       }, 0);
 

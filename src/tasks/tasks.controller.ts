@@ -33,7 +33,9 @@ export class TasksController {
   }
 
   @Get('today')
-  @ApiOperation({ summary: 'List tasks scheduled for today in the user timezone' })
+  @ApiOperation({
+    summary: 'List tasks scheduled for today in the user timezone',
+  })
   findToday(@CurrentUser() user: AuthUser) {
     return this.tasksService.findToday(user.id, user.timezone);
   }

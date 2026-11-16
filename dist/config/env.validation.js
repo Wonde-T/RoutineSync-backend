@@ -51,6 +51,7 @@ exports.envValidationSchema = Joi.object({
     DB_SYNCHRONIZE: Joi.boolean().default(false),
     JWT_SECRET: Joi.string().min(16).required(),
     JWT_EXPIRES_IN: Joi.string().default('30d'),
+    GOOGLE_WEB_CLIENT_ID: Joi.string().optional(),
     SMTP_HOST: Joi.string().optional(),
     SMTP_PORT: Joi.number().port().optional(),
     SMTP_SECURE: Joi.boolean().optional(),

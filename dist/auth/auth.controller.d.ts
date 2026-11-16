@@ -2,6 +2,7 @@ import type { AuthUser } from '../common/interfaces/auth-user.interface';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { GoogleAuthDto } from './dto/google-auth.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -18,8 +19,14 @@ export declare class AuthController {
         accessToken: string;
         user: import("../entities").User;
     }>;
+    google(dto: GoogleAuthDto): Promise<{
+        accessToken: string;
+        user: import("../entities").User;
+    }>;
     forgotPassword(dto: ForgotPasswordDto): Promise<{
         message: string;
+        emailConfigured: boolean;
+        deliveryFailed: boolean;
     }>;
     verifyResetCode(dto: VerifyResetCodeDto): Promise<{
         resetToken: string;

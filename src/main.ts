@@ -16,9 +16,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  app.useGlobalInterceptors(
-    new ClassSerializerInterceptor(app.get(Reflector)),
-  );
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   const corsOrigin = configService.get<string>('CORS_ORIGIN') ?? '*';
   app.enableCors({
